@@ -1,0 +1,37 @@
+<LinearLayout
+    android:id="@+id/llAll"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="${relativePackage}.${activityClass}" >
+	<ImageView 
+	    android:id="@+id/photo"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="10"
+		android:src="@drawable/blue"
+		/>
+	<LinearLayout 
+	    android:id="@+id/controlBar"
+	    android:layout_width="match_parent"
+	    android:layout_height="0dp"
+	    android:layout_weight="1"
+		android:visibility="gone"
+	    >
+		<EditText 
+			android:id="@+id/et2p"
+		    android:layout_width="0dp"
+		    android:layout_height="match_parent"
+		    android:layout_weight="6"
+			/>
+		<Button 
+		    android:layout_width="0dp"
+		    android:layout_height="match_parent"
+		    android:layout_weight="1"
+		    android:text="Add"
+		    android:onClick="pain2Photo"
+		    />
+	</LinearLayout>
+</LinearLayout>

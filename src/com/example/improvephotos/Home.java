@@ -14,9 +14,18 @@ public class Home extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_home);
 	}
-	public void jump2Photos(View v) {
+
+	public void jump2Photo(View v) {
 		Intent it = new Intent();
-		it.setClass(Home.this, Photos.class);
+		it.setClass(Home.this, Photo.class);
+		it.putExtra("way", Photo.ChoosePhoto);
+		Home.this.startActivity(it);
+	}
+
+	public void jump2Camera(View v) {
+		Intent it = new Intent();
+		it.setClass(Home.this, Photo.class);
+		it.putExtra("way", Photo.TakePhoto);
 		Home.this.startActivity(it);
 	}
 }

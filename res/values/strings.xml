@@ -4,5 +4,6 @@
     <string name="app_name">ImprovePhotos</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_photos">Photos</string>
+    <string name="title_activity_camera">Camera</string>
 
 </resources>
