@@ -1,22 +1,29 @@
 package com.example.improvephotos;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import android.Manifest;
 import android.Manifest.permission;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -26,7 +33,9 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -41,7 +50,11 @@ public class Photo extends Activity {
 	private LinearLayout llAll;
 	private LinearLayout controlBar;
 	private Bitmap photoBm;
+	private Bitmap newPhotoBm;
 	private Uri cameraUri;
+	
+	private float painPositionX = 0;
+	private float painPositionY = 0;
 
 	@SuppressLint("NewApi")
 	@Override
@@ -54,6 +67,33 @@ public class Photo extends Activity {
 		controlBar = (LinearLayout)findViewById(R.id.controlBar);
 		
 		checkAndApplyPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+		photo.setOnTouchListener(new OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				// TODO Auto-generated method stub
+                float[] photoMatrix = new float[10];
+                photo.getImageMatrix().getValues(photoMatrix);
+
+				float photoWidth = photo.getDrawable().getBounds().width();
+                photoWidth = (int)(photoWidth * photoMatrix[0]);  
+				float photoHeight = photo.getDrawable().getBounds().height();
+                photoHeight = (int)(photoHeight * photoMatrix[4]);  
+
+				if(event.getAction() == MotionEvent.ACTION_DOWN) {
+					painPositionX = (event.getX()-(photo.getWidth() - photoWidth)/2)/photoWidth;
+					painPositionY = (event.getY()-(photo.getHeight() - photoHeight)/2)/photoHeight;
+					pain2Photo(v);
+				}
+
+//				Dialog dl = new Dialog(Photo.this);
+//				dl.setTitle(photoHeight+" "+photo.getScaleY()+" "+event.getY());
+//				dl.show();
+				
+				return true;
+			}
+		});
 		
 		Intent recIt = getIntent();
 		switch(recIt.getIntExtra("way", 5)) {
@@ -85,11 +125,11 @@ public class Photo extends Activity {
 	}
 	
 	public void pain2Photo(View v) {
-		Bitmap tempBm = Bitmap.createBitmap(photoBm.getWidth(), photoBm.getHeight(), Bitmap.Config.ARGB_8888);
-		Canvas tempCv = new Canvas(tempBm);
+		newPhotoBm = Bitmap.createBitmap(photoBm.getWidth(), photoBm.getHeight(), Bitmap.Config.ARGB_8888);
+		Canvas tempCv = new Canvas(newPhotoBm);
 		Paint tempPt = new Paint(Paint.DITHER_FLAG | Paint.FILTER_BITMAP_FLAG);
-		Rect src = new Rect(0, 0, tempBm.getWidth(), tempBm.getHeight());
-		Rect dst = new Rect(0, 0, tempBm.getWidth(), tempBm.getHeight());
+		Rect src = new Rect(0, 0, newPhotoBm.getWidth(), newPhotoBm.getHeight());
+		Rect dst = new Rect(0, 0, newPhotoBm.getWidth(), newPhotoBm.getHeight());
 		tempCv.drawBitmap(photoBm, src, dst, tempPt);
 		
 		Paint textPt = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DEV_KERN_TEXT_FLAG);
@@ -97,12 +137,13 @@ public class Photo extends Activity {
 		textPt.setTypeface(Typeface.DEFAULT_BOLD);
 		textPt.setColor(Color.GREEN);
 		
-		tempCv.drawText(et2p.getText().toString(), tempBm.getWidth()/2-5, tempBm.getHeight()/2+5, textPt);
-//		tempCv.drawText("SSSS", tempBm.getWidth()/2-5, tempBm.getHeight()/2+5, textPt);
+//		tempCv.drawText(et2p.getText().toString(), newPhotoBm.getWidth()/2-5, tempBm.getHeight()/2+5, textPt);
+		tempCv.drawText(et2p.getText().toString(), painPositionX*newPhotoBm.getWidth(), painPositionY*newPhotoBm.getHeight(), textPt);
+//		tempCv.drawText(et2p.getText().toString(), 0, 0, textPt);
 		tempCv.save();
 //		tempCv.restore();
 		
-		photo.setImageBitmap(tempBm);
+		photo.setImageBitmap(newPhotoBm);
 	}
 	
 	@SuppressLint("NewApi")
@@ -140,5 +181,25 @@ public class Photo extends Activity {
 		Intent it = new Intent("android.media.action.IMAGE_CAPTURE");
 		it.putExtra(MediaStore.EXTRA_OUTPUT, cameraUri);
 		Photo.this.startActivityForResult(it, Photo.TakePhoto);
+	}
+	
+	public void saveNewPhoto(View v) {
+		Log.i("save photo", "begin");
+		File newPhotoFile = new File(Environment.getExternalStorageDirectory(), "333.jpg");
+		if(newPhotoFile.exists()) {
+			newPhotoFile.delete();
+		}
+		try {
+			newPhotoFile.createNewFile();
+			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(newPhotoFile));
+			newPhotoBm.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+			bos.flush();
+			bos.close();
+			Log.i("save photo", "over");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			Log.i("save photo", "eee");
+			e.printStackTrace();
+		}
 	}
 }
